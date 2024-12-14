@@ -1,0 +1,24 @@
+name: prd build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: release
+          fetch-depth: 0
+
+      - name: Merge & Push
+        run: |
+          git remote set-head origin --auto
+          git merge "origin/$(git symbolic-ref refs/remotes/origin/HEAD | awk -F'[/]' '{print $NF}')"
+          git push
