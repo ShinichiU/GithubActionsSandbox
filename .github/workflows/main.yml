@@ -6,6 +6,9 @@ on:
     branches:
       - main
 
+env:
+  SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,3 +25,12 @@ jobs:
           git remote set-head origin --auto
           git merge "origin/$(git symbolic-ref refs/remotes/origin/HEAD | awk -F'[/]' '{print $NF}')"
           git push
+
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        if: ${{ failure() }}
+        env:
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_ICON: https://github.com/rtCamp.png?size=48
+          SLACK_TITLE: Deploy / Failure
+          SLACK_MESSAGE: デプロイ失敗しました😢
