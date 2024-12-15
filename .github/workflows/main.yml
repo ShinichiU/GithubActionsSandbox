@@ -10,12 +10,12 @@ env:
   SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
 
 jobs:
-  build:
+  merge:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           ref: release
           fetch-depth: 0
@@ -26,11 +26,16 @@ jobs:
           git merge "origin/$(git symbolic-ref refs/remotes/origin/HEAD | awk -F'[/]' '{print $NF}')"
           git push
 
+  notify:
+    runs-on: ubuntu-latest
+    needs: [merge]
+    steps:
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
         if: ${{ failure() }}
         env:
           SLACK_COLOR: ${{ job.status }}
-          SLACK_ICON: https://github.com/rtCamp.png?size=48
-          SLACK_TITLE: Deploy / Failure
-          SLACK_MESSAGE: デプロイ失敗しました😢
+          SLACK_ICON: https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png
+          SLACK_USERNAME: GitHubBot
+          SLACK_TITLE: Commit merge failure!
+          SLACK_MESSAGE: ${{ toJSON(needs.merge.outputs) }}
